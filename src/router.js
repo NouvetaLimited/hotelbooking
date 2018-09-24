@@ -1,15 +1,27 @@
 import Vue from "vue";
 import Router from "vue-router";
 import Home from "./views/Home.vue";
+import Dashboard from "@/components/Dashboardhome.vue";
+import Bookings from "@/components/AllBookings.vue";
 
 Vue.use(Router);
 
 export default new Router({
   routes: [
     {
-      path: "/",
+      path: "/bookings",
+      name: "all",
+      component: Bookings
+    },
+    {
+      path: "/front",
       name: "home",
       component: Home
+    },
+    {
+      path: "/",
+      name: "dashboard",
+      component: Dashboard
     },
     {
       path: "/about",
