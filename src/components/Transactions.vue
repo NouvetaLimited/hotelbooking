@@ -49,96 +49,7 @@
         <div class="content">
             <!-- summary -->
             <div>
-                <h2 class="head">Dashboard</h2>
-            </div>
-            <div class="card-list">
-                
-                <!-- card 1 -->
-                    <div class="card-list-item redish">
-                        <div class="card-info">
-                            <div class="card-icon">
-                                <i class="fa fa-calendar" style="font-size: 50px;"></i>
-                               
-                            </div>
-                             <div class="card-summary">
-                                    <p>Bookings</p>
-                                    <p>30</p>
-                                </div>
-                            
-                           
-                        </div>
-                         <div class="card-detail">
-                             
-                                <p class="card-title">Amount</p>
-                                <p>$1500</p>
-
-                
-                            </div>
-
-                        </div>
-                    <!-- card2 -->
-                     <div class="card-list-item  dark-red">
-                        <div class="card-info">
-                            <div class="card-icon">
-                                <i class="fa fa-check" style="font-size: 50px;"></i>
-                               
-                            </div>
-                             <div class="card-summary">
-                                    <p> Paid Bookings</p>
-                                    <p>30</p>
-                                </div>
-                            
-                           
-                        </div>
-                         <div class="card-detail">
-                             
-                                <p class="card-title">Amount</p>
-                                <p>$1500</p>
-
-                
-                            </div>
-
-                        </div>
-                        
-                        <!-- card3 -->
-                         <div class="card-list-item yellowish">
-                        <div class="card-info">
-                            <div class="card-icon">
-                                <i class="fa fa-close" style="font-size: 50px;"></i>
-                               
-                            </div>
-                             <div class="card-summary">
-                                    <p> Unpaid Bookings</p>
-                                    <p>0</p>
-                                </div>
-                            
-                           
-                        </div>
-                         <div class="card-detail">
-                             
-                                <p class="card-title">Amount</p>
-                                <p>$0</p>
-
-                
-                            </div>
-
-                        </div>
-                        
-            </div>
-           
-            <!-- charts -->
-            <div class="charts">
-                <div class="pie-chart">
-                    <h2>Earnings from Each Hotel</h2>
-                    <Doughnut/>
-
-                </div>
-                <div class="bar-chart">
-                    <h2>Bookings from Each Hotel</h2>
-                    <Barchart/>
-
-                </div>
-
+                <h2 class="head">Transactions</h2>
             </div>
             
             <!-- table -->
@@ -148,7 +59,7 @@
     
       <v-card>
         <v-card-title>
-      Hotels Income
+      Latest Guests
       <v-spacer></v-spacer>
       <v-text-field
         v-model="search"
@@ -165,10 +76,29 @@
       class="elevation-1"
     >
       <template slot="items" slot-scope="props">
+        <td>{{ props.item.number }}</td>
         <td class="">{{ props.item.name }}</td>
-        <td class="">{{ props.item.mpesa }}</td>
-        <td class="">{{ props.item.card }}</td>
-        <td class="">{{ props.item.total }}</td>
+        <td class="">{{ props.item.checkin }}</td>
+        <td class="">{{ props.item.checkout }}</td>
+        <td class="">{{ props.item.status }}</td>
+        <td class="">{{ props.item.phone }}</td>
+        <td class="">{{ props.item.hotel }}</td>
+        <td class="">{{ props.item.roomtype }}</td>
+        <td class="justify-center layout px-0">
+          <v-icon
+            small
+            class="mr-2"
+            @click="editItem(props.item)"
+          >
+            edit
+          </v-icon>
+          <v-icon
+            small
+            @click="deleteItem(props.item)"
+          >
+            delete
+          </v-icon>
+        </td>
       </template>
       <template slot="no-data">
         <v-btn color="primary" @click="initialize">Reset</v-btn>
@@ -197,42 +127,68 @@ export default {
   data() {
     return {
       headers: [
-        { text: "Hotel Name", value: "name", align: "center" },
-        { text: "Mpesa Income", value: "checkin", align: "center" },
-        { text: "Card income", value: "checkout", align: "center" },
-        { text: "Total", value: "checkout", align: "center" }
+        { text: "No", value: "number", align: "center", sortable: true },
+        { text: "Name", value: "name", align: "center" },
+        { text: "Check In", value: "checkin", align: "center" },
+        { text: "Checkout", value: "checkout", align: "center" },
+        { text: "Status", value: "status", align: "center" },
+        { text: "Phone", value: "phone", align: "center" },
+        { text: "Hotel", value: "hotel", align: "center" },
+        { text: "Room type", value: "roomtype", align: "center" },
+        { text: "Edit", align: "center" }
       ],
       search: "",
       desserts: [
         {
-          mpesa: 30000,
-          name: "Hadassah Hotel",
-          card: 400000,
-          total: 430000
+          number: 1,
+          name: "Alex tito",
+          checkin: "11/5/2018",
+          checkout: "11/5/2018",
+          status: "paid",
+          phone: "0715600582",
+          roomtype: "single",
+          hotel: "Hadassah Hotel"
         },
         {
-          mpesa: 20000,
-          name: "West Wood Hotel",
-          card: 9000,
-          total: 29000
+          number: 2,
+          name: "Brian Mituka",
+          checkin: "11/5/2018",
+          checkout: "11/5/2018",
+          status: "paid",
+          phone: "0715600582",
+          roomtype: "single",
+          hotel: "Masada Hotel"
         },
         {
-          mpesa: 30000,
-          name: "Pearl palace hotel",
-          card: 7000,
-          total: 37000
+          number: 3,
+          name: "zeed charles",
+          checkin: "11/5/2018",
+          checkout: "11/5/2018",
+          status: "paid",
+          phone: "0715600582",
+          roomtype: "single",
+          hotel: "Pearl Palace Hotel"
         },
         {
-          mpesa: 50000,
-          name: "Sweet Lake Resort",
-          card: 400000,
-          total: 90000
+          number: 4,
+          name: "Kobayashi Maru",
+          checkin: "11/5/2018",
+          checkout: "11/5/2018",
+          status: "paid",
+          phone: "0715600582",
+          roomtype: "single",
+          hotel: "West wood Hotel"
         },
         {
-          mpesa: 60000,
-          name: "Lake Naivasha resort",
-          card: 4000,
-          total: 100000
+          value: false,
+          number: 5,
+          name: "Ahmed Ali",
+          checkin: "11/5/2018",
+          checkout: "11/5/2018",
+          status: "paid",
+          phone: "0715600582",
+          roomtype: "single",
+          hotel: "Sweet Lake Resort"
         }
       ]
     };

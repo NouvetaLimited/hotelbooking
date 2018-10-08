@@ -38,8 +38,8 @@
                  <router-link tag="li" to="/bookings">
                 Bookings
                  </router-link>
-               <router-link tag="li" to="/reports">
-                Reports
+               <router-link tag="li" to="/transactions">
+                Transactions
                  </router-link> 
             </ul>
 
@@ -51,11 +51,78 @@
             <div class="head">
                 <h2>All Rooms</h2>                      
             </div>
+            <v-card>
+          <v-card-title>
+            <span class="headline">{{ formTitle }}</span>
+          </v-card-title>
+
+          <v-card-text>
+            <v-container grid-list-md>
+              <v-form ref="form" v-model="valid" lazy-validation>
+                 <v-alert
+      :value="true"
+      type="error"
+      v-if="err"
+      dismissible
+    >
+      An error occured
+    </v-alert>
+   <v-alert
+      :value="true"
+      type="success"
+      v-if="success"
+      dismissible
+    >
+      Room Succesfully created
+    </v-alert>
+              <v-layout wrap>
+                <v-flex xs12 sm6 md4>
+                  <v-select :items="hotels" v-model="selectedhotel"
+                   item-text="name" 
+                   @change="getHotelRoomTypes"
+                   item-value="hotel_id" 
+                   label="Hotel"
+                    :rules="[v => !!v || 'Hotel is required']"
+                    ></v-select>
+                </v-flex>
+                <v-flex xs12 sm6 md4>
+                  <v-select :items="roomtypes" 
+                  item-text="name"
+                  item-value="room_type_id"
+                   v-model="selectedroomtype" 
+                   label="Room type"
+                    :rules="[v => !!v || 'Room type is required']"
+                   ></v-select>
+                </v-flex>
+                <v-flex xs12 sm6 md4>
+                  <v-text-field v-model="roomnumber" 
+                   :rules="[v => !!v || 'Room number is required']"
+                  label="Room number"></v-text-field>
+                </v-flex>
+                <v-flex xs12 sm6 md4>
+                  <v-select :items="statuses"
+                   v-model="status"
+                    label="Status"
+                     :rules="[v => !!v || 'Room status is required']"
+                    ></v-select>
+                </v-flex>
+              </v-layout>
+              </v-form>
+            </v-container>
+          </v-card-text>
+
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="red darken-1" :disabled="!valid" @click="addRoomToHotel">Add</v-btn>
+          </v-card-actions>
+        </v-card>
             <!-- table -->
             <div class="tables">
                 <div>
                 <v-app>
-                    <v-toolbar flat color="white">
+                  
+
+                    <v-toolbar flat color="white" class="mt-5">
      <v-text-field
         v-model="search"
         append-icon="search"
@@ -65,7 +132,7 @@
       ></v-text-field>
       <v-spacer></v-spacer>
       <v-dialog v-model="dialog" max-width="600px">
-        <v-btn slot="activator" color="red darken-3" class="mb-2">New Rooms</v-btn>
+      
         <v-card>
           <v-card-title>
             <span class="headline">{{ formTitle }}</span>
@@ -104,7 +171,7 @@
       <template slot="items" slot-scope="props">
          <td class="">{{ props.item.roomtype }}</td>
          <td class="">{{ props.item.status }}</td>
-        <td class="">{{ props.item.roomnumber }}</td> 
+        <td class="">{{ props.item.room_number }}</td> 
         <td class="justify-center layout px-0">
           <v-icon
             small
@@ -122,7 +189,7 @@
         </td>
       </template>
       <template slot="no-data">
-        <v-btn color="primary" @click="initialize">Reset</v-btn>
+       No data available
       </template>
     </v-data-table>
   </v-app>
@@ -135,11 +202,13 @@
     </div>
 </template>
 <script>
+import axios from "axios";
 export default {
   name: "allbookings",
   data() {
     return {
       dialog: false,
+      roomtypes: [],
       headers: [
         { text: "Room Type", value: "roomtype", align: "center" },
         { text: "Status", value: "status", align: "center" },
@@ -147,24 +216,31 @@ export default {
         { text: "Edit", value: null, align: "center" }
       ],
       rooms: [],
-      roomtypes: ["superior", "deluxe", "premium"],
+      selectedroomtype: null,
+      roomnumber: "",
+      status: null,
       editedIndex: -1,
       editedItem: {
         status: "",
         roomnumber: "",
         roomtype: ""
-        
       },
-      search:"",
+      search: "",
       defaultItem: {
         status: "",
         roomnumber: "",
         roomtype: ""
       },
       statuses: ["available", "closed", "under maintanance"],
-      imageName: '',
-		  imageUrl: '',
-		  imageFile: '',
+      imageName: "",
+      imageUrl: "",
+      imageFile: "",
+      selectedhotel: null,
+      hotels: [],
+      valid: true,
+      success: false,
+      err: false,
+      roomId: ""
     };
   },
   computed: {
@@ -180,88 +256,112 @@ export default {
   },
 
   created() {
-    this.initialize();
+    //this.getRoomTypes();
+    this.getHotel();
+    this.getAllHotelRooms();
   },
 
   methods: {
-    pickFile () {
-            this.$refs.image.click ()
-        },
-        onFilePicked (e) {
-			const files = e.target.files
-			if(files[0] !== undefined) {
-				this.editedItem.img = files[0].name
-				if(this.editedItem.img.lastIndexOf('.') <= 0) {
-					return
-				}
-				const fr = new FileReader ()
-				fr.readAsDataURL(files[0])
-				fr.addEventListener('load', () => {
-					this.imageUrl = fr.result
-					this.imageFile = files[0] // this is an image file that can be sent to server...
-				})
-			} else {
-				this.editedItem.img = ''
-				this.imageFile = ''
-				this.imageUrl = ''
-			}
-		},
-    initialize() {
-      this.rooms = [
-        {
-
-        status: "under maintainance",
-        roomnumber: "12",
-        roomtype: "presidential"
-        },
-        {
-        status: "available",
-        roomnumber: "15",
-        roomtype: "Premium"
-        },
-        {
-        status: "closed",
-        roomnumber: "17",
-        roomtype: "Deluxe"
-        },
-        {
-        status: "under maintainance",
-        roomnumber: "12",
-        roomtype: "presidential"
-        },
-        {
-        status: "closed",
-        roomnumber: "17",
-        roomtype: "Deluxe"
-        },
-        {
-        status: "available",
-        roomnumber: "15",
-        roomtype: "Premium"
-        },
-        {
-        status: "available",
-        roomnumber: "15",
-        roomtype: "Premium"
-        },
-        {
-        status: "closed",
-        roomnumber: "17",
-        roomtype: "Deluxe"
-        },
-        {
-        status: "under maintainance",
-        roomnumber: "12",
-        roomtype: "presidential"
-        },
-        {
-        status: "closed",
-        roomnumber: "17",
-        roomtype: "Deluxe"
-        }
-      ];
+    getHotelRoomTypes() {
+      axios
+        .get(`http://localhost:3000/hotels/${this.selectedhotel}/room_types`)
+        .then(result => {
+          result.data.forEach(element => {
+            this.roomtypes.push(element);
+          });
+          console.log("My rooms are", result);
+        })
+        .catch(err => {
+          console.log(err);
+        });
     },
+    getAllHotelRooms() {
+      axios
+        .get("http://localhost:3000/rooms")
+        .then(result => {
+          console.log(result.data);
+          result.data.forEach(element => {
+            this.rooms.push(element);
+          });
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    addRoomToHotel() {
+      if (this.$refs.form.validate()) {
+        axios
+          .post(
+            `http://localhost:3000/hotels/${this.selectedhotel}/rooms?status=${
+              this.status
+            }&room_type_id=${this.selectedroomtype}&room_number=${
+              this.roomnumber
+            }`
+          )
+          .then(result => {
+            if (result.statusText === "Created") {
+              this.success = true;
+              setTimeout(() => {
+                this.success = false;
+              }, 4000);
+              this.$refs.form.reset();
+            } else {
+              this.err = true;
+              console.log(result);
+            }
+          })
+          .catch(err => {
+            console.log(err);
+          });
+      }
+    },
+    getHotel() {
+      axios
+        .get("http://localhost:3000/groups/1/hotels")
+        .then(result => {
+          result.data.forEach(element => {
+            this.hotels.push(element);
+            // console.log("HOTELS", this.hotels)
+          });
+          // console.log(result.data);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    // getRoomTypes(){
+    //   axios.get('http://localhost:3000/roomtypes')
+    //   .then((result) => {
+    //     result.data.forEach(element => {
+    //       this.roomtypes.push(element)
+    //     });
 
+    //   }).catch((err) => {
+    //     console.log(err)
+    //   });
+    // },
+    pickFile() {
+      this.$refs.image.click();
+    },
+    onFilePicked(e) {
+      const files = e.target.files;
+      if (files[0] !== undefined) {
+        this.editedItem.img = files[0].name;
+        if (this.editedItem.img.lastIndexOf(".") <= 0) {
+          return;
+        }
+        const fr = new FileReader();
+        fr.readAsDataURL(files[0]);
+        fr.addEventListener("load", () => {
+          this.imageUrl = fr.result;
+          this.imageFile = files[0]; // this is an image file that can be sent to server...
+        });
+      } else {
+        this.editedItem.img = "";
+        this.imageFile = "";
+        this.imageUrl = "";
+      }
+    },
     editItem(item) {
       this.editedIndex = this.rooms.indexOf(item);
       this.editedItem = Object.assign({}, item);

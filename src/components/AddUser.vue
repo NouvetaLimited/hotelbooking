@@ -19,7 +19,7 @@
         <!-- sidebar -->
         <div class="sidebar">
             <ul class="lists">
-                <router-link tag="li" to="/dashboard">
+                   <router-link tag="li" to="/dashboard">
                 Dashboard
                  </router-link> 
                   <router-link tag="li" to="/addhotel">
@@ -37,8 +37,8 @@
                  <router-link tag="li" to="/bookings">
                 Bookings
                  </router-link>
-               <router-link tag="li" to="/reports">
-                Reports
+               <router-link tag="li" to="/transactions">
+                Transactions
                  </router-link> 
             </ul>
 
@@ -55,6 +55,22 @@
                 <div>
                 <v-app>
  <v-form ref="form" v-model="valid" lazy-validation>
+   <v-alert
+      :value="true"
+      type="error"
+      v-if="err"
+      dismissible
+    >
+      An error occured
+    </v-alert>
+   <v-alert
+      :value="true"
+      type="success"
+      v-if="success"
+      dismissible
+    >
+      User Succesfully created
+    </v-alert>
     <v-text-field
       v-model="name"
       :rules="nameRules"
@@ -105,17 +121,13 @@
             <v-container grid-list-md>
               <v-layout wrap>
                 <v-flex xs12 sm6 md4>
-                  <v-text-field v-model="editedItem.name" label="Name"></v-text-field>
+                  <v-text-field v-model="editedItem.first_name" label="Name"></v-text-field>
                 </v-flex>
                 <v-flex xs12 sm6 md4>
                   <v-text-field v-model="editedItem.email" label="Email"></v-text-field>
                 </v-flex>
-                <v-flex xs12 sm6 md4>
-                 
-                  <v-text-field   :type="'password'" v-model="editedItem.password" label="Password"></v-text-field>
-                </v-flex>
                 <v-flex xs12 sm6 md4>                  
-                  <v-text-field  slot="activator" v-model="editedItem.jobdescription" label="Job Desscription"></v-text-field> 
+                  <v-text-field  slot="activator" v-model="editedItem.position" label="Position"></v-text-field> 
                 </v-flex>
               </v-layout>
             </v-container>
@@ -157,10 +169,9 @@
       class="elevation-1"
     >
       <template slot="items" slot-scope="props">
-        <td class="">{{ props.item.name }}</td>
+        <td class="">{{ props.item.first_name }}</td>
         <td class="">{{ props.item.email }}</td>
-        <td class="">{{ props.item.password }}</td>
-        <td class="">{{ props.item.jobdescription }}</td>
+        <td class="">{{ props.item.position }}</td>
         <td class="justify-center layout px-0">
           <v-icon
             small
@@ -199,100 +210,112 @@ export default {
   data() {
     return {
       valid: true,
-      name: '',
+      err: false,
+      name: "",
       dialog: false,
       search: "",
       editedIndex: -1,
       editedItem: {
-        name: "",
+        first_name: "",
         email: "",
-        password: "",
-        jobdescription: "",
+        position: ""
       },
       defaultItem: {
-      name: "",
+        first_name: "",
         email: "",
-        password: "",
-        jobdescription: ""
+        position: ""
       },
       nameRules: [
-        v => !!v || 'Name is required',
-        v => (v && v.length >= 5) || 'Name must be less than 10 characters'
+        v => !!v || "Name is required",
+        v => (v && v.length >= 5) || "Name must be less than 10 characters"
       ],
-      email: '',
-      password: '',
+      email: "",
+      password: "",
       emailRules: [
-        v => !!v || 'E-mail is required',
-        v => /.+@.+/.test(v) || 'E-mail must be valid'
+        v => !!v || "E-mail is required",
+        v => /.+@.+/.test(v) || "E-mail must be valid"
       ],
       select: null,
-      roles: [
-        'clerk',
-        'admin',
-        'supervisor',
-        'receptionist'
-      ],
+      roles: ["clerk", "admin", "supervisor", "receptionist"],
       checkbox: false,
-      users: [
-          {name: "Kate Njeri",
-          email: "kate@superiorhotels.co.ke",
-          password:"*****",
-          jobdescription: "Customer care"},
-          {name: "Alex Tito",
-          email: "alex@superiorhotels.co.ke",
-          password:"*****",
-          jobdescription: "Accountant"},
-          {name: "Ian Jravin",
-          email: "ian@superiorhotels.co.ke",
-          password:"*****",
-          jobdescription: "Manager"},
-          {name: "Brian Nitletone",
-          email: "brian@superiorhotels.co.ke",
-          password:"*****",
-          jobdescription: "Room inspector"}
-      ],
-       headers: [
+      success: false,
+      users: [],
+      headers: [
         { text: "Name", value: "name", align: "center" },
         { text: "Email", value: "location", align: "center" },
-        { text: "Password", value: "address", align: "center" },
         { text: "Position", value: "contact", align: "center" },
         { text: "Edit", align: "center" }
       ]
     };
   },
   computed: {
-      formTitle() {
+    formTitle() {
       return this.editedIndex === -1 ? "" : "Edit User";
     }
-    
   },
 
   watch: {
-      dialog(val) {
+    dialog(val) {
       val || this.close();
     }
-   
   },
 
   created() {
-    
+    this.getUsers();
   },
 
   methods: {
-    submit () {
-        if (this.$refs.form.validate()) {
-          this.users.push({name: this.name, password:this.password, email:this.email, jobdescription:this.select})
-          //Object.assign(this.users[{name:this.name, email:this.email, password:this.password, jobdescription:this.select}], this.users);
-          // Native form submission is not yet supported
-          // axios.post(`http://111d39c5.ngrok.io:3000/groups/1/new/hotel?name=${this.name}&email=${this.email}&password=${this.password}`)
-          // .then((result) => {
-          //   console.log(result);
-          // }).catch((err) => {
-          //   console.log(err)
-          // });
-        }
-      },
-      editItem(item) {
+    getUsers() {
+      axios
+        .get("http://localhost:3000/users")
+        .then(result => {
+          result.data.forEach(element => {
+            this.users.push(element);
+            console.log(element);
+          });
+          console.log(result.data);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    submit() {
+      if (this.$refs.form.validate()) {
+        this.users.push({
+          first_name: this.name,
+          password: this.password,
+          email: this.email,
+          position: this.select
+        });
+        //Object.assign(this.users[{name:this.name, email:this.email, password:this.password, jobdescription:this.select}], this.users);
+        // Native form submission is not yet supported
+        axios
+          .post(
+            `http://localhost:3000/auth/register?first_name=${
+              this.name
+            }&email=${this.email}&password=${this.password}&position=${
+              this.select
+            }`
+          )
+          .then(result => {
+            if (result.statusText === "Created") {
+              this.success = true;
+              setTimeout(() => {
+                this.success = false;
+              }, 4000);
+              this.$refs.form.reset();
+            } else {
+              this.err = true;
+              console.log(result);
+            }
+            console.log(result);
+          })
+          .catch(err => {
+            console.log(err);
+          });
+      }
+    },
+    editItem(item) {
       this.editedIndex = this.users.indexOf(item);
       this.editedItem = Object.assign({}, item);
       this.dialog = true;
@@ -320,11 +343,9 @@ export default {
       }
       this.close();
     },
-      clear () {
-        this.$refs.form.reset()
-      }
-   
-
+    clear() {
+      this.$refs.form.reset();
+    }
   }
 };
 </script>

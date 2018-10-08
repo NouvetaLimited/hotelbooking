@@ -8,6 +8,7 @@ import AddHotel from "@/components/AddHotel.vue";
 import AddUser from "@/components/AddUser.vue";
 import RoomType from "@/components/Roomtype.vue";
 import Login from "@/components/Login.vue";
+import Transactions from "@/components/Transactions";
 
 Vue.use(Router);
 
@@ -17,6 +18,11 @@ export default new Router({
       path: "/roomtype",
       name: "roomtype",
       component: RoomType
+    },
+    {
+      path: "/transactions",
+      name: "transactions",
+      component: Transactions
     },
     {
       path: "/bookings",

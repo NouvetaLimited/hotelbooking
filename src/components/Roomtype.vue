@@ -20,7 +20,7 @@
         <!-- sidebar -->
         <div class="sidebar">
             <ul class="lists">
-                  <router-link tag="li" to="/dashboard">
+                   <router-link tag="li" to="/dashboard">
                 Dashboard
                  </router-link> 
                   <router-link tag="li" to="/addhotel">
@@ -38,10 +38,9 @@
                  <router-link tag="li" to="/bookings">
                 Bookings
                  </router-link>
-               <router-link tag="li" to="/reports">
-                Reports
+               <router-link tag="li" to="/transactions">
+                Transactions
                  </router-link> 
-                 
             </ul>
 
         </div>
@@ -52,11 +51,102 @@
             <div class="head">
                 <h2>Room types</h2>                      
             </div>
+            <v-card>
+          <v-card-title>
+            <span class="headline">Add Room Type</span>
+          </v-card-title>
+
+          <v-card-text>
+            <v-container grid-list-md>
+               <v-form ref="form" v-model="valid">
+        <v-alert
+      :value="true"
+      type="error"
+      v-if="err"
+      dismissible
+    >
+      An error occured
+    </v-alert>
+   <v-alert
+      :value="true"
+      type="success"
+      v-if="success"
+      dismissible
+    >
+      Room type successfully created
+    </v-alert>
+              <v-layout wrap>
+               
+                <v-flex xs12 sm6 md4>
+                  <v-text-field @click='pickFile' prepend-icon='attach_file'   v-model="img" label="Select image"></v-text-field>
+                  <input
+						type="file"
+						style="display: none"
+						ref="image"
+						accept="image/*"
+						@change="onFilePicked"
+					>
+                </v-flex>
+                <v-flex xs12 sm6 md4>
+                  <v-text-field 
+                  v-model="name" 
+                  label="Name"
+                  :rules="[v => !!v || 'name is required']"></v-text-field>
+                </v-flex>
+                <v-flex xs12 sm6 md4>
+                  <v-select 
+                  :items="hotels"
+                  :rules="[v => !!v || 'Hotel is required']"  
+                  label="Hotel"
+                  item-text="name"
+                  item-value="hotel_id"
+                  v-model="selectedhotel"
+            ></v-select>
+                </v-flex>
+                <v-flex xs12 sm6 md4>
+                  <v-text-field v-model="charge" 
+                  :rules="[v => !!v || 'Charge is required']"
+                  label="Charge"></v-text-field>
+                </v-flex>
+                <v-flex xs12 sm6 md4>
+                  <v-text-field v-model="occupancy"
+                   label="Occupancy"
+                   :rules="[v => !!v || 'Occupancy is required']"
+                   ></v-text-field>
+                </v-flex>
+                <v-flex xs12 sm6 md4>
+                  <v-text-field v-model="beds"
+                   label="Beds"
+                   :rules="[v => !!v || 'beds is required']"
+                   ></v-text-field>
+                </v-flex>
+                <v-flex xs12 sm6 md4>
+                  <v-text-field v-model="baths" 
+                  :rules="[v => !!v || 'Baths is required']"
+                  label="Baths"></v-text-field>
+                </v-flex>
+                <v-flex xs12 sm6 md4>
+                  <v-text-field v-model="description"
+                  :rules="[v => !!v || 'Description is required']"
+                   label="Description"></v-text-field>
+                </v-flex>
+               
+              </v-layout>
+               </v-form>
+            </v-container>
+          </v-card-text>
+
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="red darken-1" :disabled="!valid" @click="addRoomType">Add</v-btn>
+          </v-card-actions>
+        </v-card>
             <!-- table -->
             <div class="tables">
                 <div>
                 <v-app>
-    <v-toolbar flat color="white">
+    <v-toolbar flat color="white" class=" elevation-2 mt-5">
+      
       <v-text-field
         v-model="search"
         append-icon="search"
@@ -67,7 +157,6 @@
      
       <v-spacer></v-spacer>
       <v-dialog v-model="dialog" max-width="600px">
-        <v-btn slot="activator" color="red darken-3" class="mb-2">New Room type</v-btn>
         <v-card>
           <v-card-title>
             <span class="headline">{{ formTitle }}</span>
@@ -118,9 +207,9 @@
     </v-toolbar>
                 <v-data-table
       :headers="headers"
-      :items="rooms"
+      :items="roomtypes"
       :search="search"
-      class="elevation-1"
+      class="elevation-1 "
     >
    
       <template slot="items" slot-scope="props">
@@ -148,7 +237,7 @@
         </td>
       </template>
       <template slot="no-data">
-        <v-btn color="primary" @click="initialize">Reset</v-btn>
+       No data available
       </template>
     </v-data-table>
   </v-app>
@@ -161,6 +250,7 @@
     </div>
 </template>
 <script>
+import axios from "axios";
 export default {
   name: "allbookings",
   data() {
@@ -171,12 +261,20 @@ export default {
         { text: "Name", value: "name", align: "center" },
         { text: "Charge", value: "charge", align: "center" },
         { text: "Occupancy", value: "occupancy", align: "center" },
-         { text: "Beds", value: "beds", align: "center" },
-          { text: "Baths", value: "baths", align: "center" },
+        { text: "Beds", value: "beds", align: "center" },
+        { text: "Baths", value: "baths", align: "center" },
         { text: "Description", value: "description", align: "center" },
         { text: "Edit", value: null, align: "center" }
       ],
-      rooms: [],
+      roomtypes: [],
+      valid: true,
+      name: "",
+      charge: "",
+      baths: "",
+      occupancy: "",
+      beds: "",
+      description: "",
+      img: "",
       editedIndex: -1,
       editedItem: {
         image: "",
@@ -185,7 +283,7 @@ export default {
         occupancy: "",
         beds: "",
         baths: "",
-        description:""
+        description: ""
       },
       defaultItem: {
         image: "",
@@ -194,15 +292,18 @@ export default {
         occupancy: "",
         beds: "",
         baths: "",
-        description:""
+        description: ""
       },
-      search:""
-      
+      search: "",
+      hotels: [],
+      selectedhotel: null,
+      success: false,
+      err: false
     };
   },
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? "Add room" : "Edit room";
+      return this.editedIndex === -1 ? "Add room type" : "Edit room type";
     }
   },
 
@@ -214,126 +315,95 @@ export default {
 
   created() {
     this.initialize();
+    this.getHotel();
+    this.getRoomTypes();
   },
 
   methods: {
-    initialize() {
-      this.rooms = [
-        {
+    getRoomTypes() {
+      axios
+        .get("http://localhost:3000/roomtypes")
+        .then(result => {
+          result.data.forEach(element => {
+            this.roomtypes.push(element);
+          });
 
-        image: "https://ticketsoko.com/supreme.png",
-        name: "Twin(MASADA Hotel)",
-        charge: "9500",
-        occupancy: "2",
-        beds: "2",
-        baths: "1",
-        description:"Wi-fi, food"
-        },
-        {
-        image: "https://ticketsoko.com/supreme.png",
-        name: "Presidential",
-        charge: "40000",
-        occupancy: "10",
-        beds: "6",
-        baths: "5",
-        description:"Wi-fi, food, parking"
-        },
-        {
-        image: "https://ticketsoko.com/supreme.png",
-        name: "premium",
-        charge: "50000",
-        occupancy: "10",
-        beds: "6",
-        baths: "5",
-        description:"Wi-fi, food, parking"
-        },
-        {
-        image: "https://ticketsoko.com/supreme.png",
-        name: "Presidential",
-        charge: "40000",
-        occupancy: "10",
-        beds: "6",
-        baths: "5",
-        description:"Wi-fi, food, parking"
-        },
-        {
-        image: "https://ticketsoko.com/supreme.png",
-        name: "premium",
-        charge: "50000",
-        occupancy: "10",
-        beds: "6",
-        baths: "5",
-        description:"Wi-fi, food, parking"
-        },
-        {
-        image: "https://ticketsoko.com/supreme.png",
-        name: "premium",
-        charge: "50000",
-        occupancy: "10",
-        beds: "6",
-        baths: "5",
-        description:"Wi-fi, food, parking"
-        },
-        {
-        image: "https://ticketsoko.com/supreme.png",
-        name: "Deluxe",
-        charge: "3000",
-        occupancy: "5",
-        beds: "1",
-        baths: "1",
-        description:"Wi-fi, food"
-        },
-        {
-        image: "https://ticketsoko.com/supreme.png",
-        name: "Presidential",
-        charge: "40000",
-        occupancy: "10",
-        beds: "6",
-        baths: "5",
-        description:"Wi-fi, food, parking"
-        },
-        {
-         image: "https://ticketsoko.com/supreme.png",
-        name: "Presidential",
-        charge: "40000",
-        occupancy: "10",
-        beds: "6",
-        baths: "5",
-        description:"Wi-fi, food, parking"
-        },
-        {
-        image: "https://ticketsoko.com/supreme.png",
-        name: "Presidential",
-        charge: "40000",
-        occupancy: "10",
-        beds: "6",
-        baths: "5",
-        description:"Wi-fi, food, parking"
-        }
-      ];
+          console.log("ROOMTYPES", result.data);
+        })
+        .catch(err => {
+          console.log(err);
+        });
     },
-     pickFile () {
-            this.$refs.image.click ()
-        },
-        onFilePicked (e) {
-			const files = e.target.files
-			if(files[0] !== undefined) {
-				this.editedItem.img = files[0].name
-				if(this.editedItem.img.lastIndexOf('.') <= 0) {
-					return
-				}
-				const fr = new FileReader ()
-				fr.readAsDataURL(files[0])
-				fr.addEventListener('load', () => {
-					this.imageUrl = fr.result
-					this.imageFile = files[0] // this is an image file that can be sent to server...
-				})
-			} else {
-				this.editedItem.img = ''
-				this.imageFile = ''
-				this.imageUrl = ''
-			}
-		},
+    addRoomType() {
+      console.log(this.selectedhotel);
+      if (this.$refs.form.validate()) {
+        axios
+          .post(
+            `http://localhost:3000/hotels/${
+              this.selectedhotel
+            }/room_types?name=${this.name}&charge=${this.charge}&baths=${
+              this.baths
+            }&description=${this.description}&occupancy=${
+              this.occupancy
+            }&beds=${this.beds}`
+          )
+          .then(result => {
+            if (result.statusText === "Created") {
+              this.success = true;
+              setTimeout(() => {
+                this.success = false;
+              }, 4000);
+              this.$refs.form.reset();
+            } else {
+              this.err = true;
+              console.log(result);
+            }
+          })
+          .catch(err => {
+            console.log(err);
+          });
+      }
+    },
+    getHotel() {
+      axios
+        .get("http://localhost:3000/groups/1/hotels")
+        .then(result => {
+          result.data.forEach(element => {
+            this.hotels.push(element);
+            // console.log("HOTELS", this.hotels)
+          });
+          // console.log(result.data);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    initialize() {
+      this.rooms = [];
+    },
+    pickFile() {
+      this.$refs.image.click();
+    },
+    onFilePicked(e) {
+      const files = e.target.files;
+      if (files[0] !== undefined) {
+        this.editedItem.img = files[0].name;
+        if (this.editedItem.img.lastIndexOf(".") <= 0) {
+          return;
+        }
+        const fr = new FileReader();
+        fr.readAsDataURL(files[0]);
+        fr.addEventListener("load", () => {
+          this.imageUrl = fr.result;
+          this.imageFile = files[0]; // this is an image file that can be sent to server...
+        });
+      } else {
+        this.editedItem.img = "";
+        this.img = "";
+        this.imageFile = "";
+        this.imageUrl = "";
+      }
+    },
     editItem(item) {
       this.editedIndex = this.rooms.indexOf(item);
       this.editedItem = Object.assign({}, item);

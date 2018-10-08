@@ -19,7 +19,7 @@
         <!-- sidebar -->
         <div class="sidebar">
             <ul class="lists">
-                 <router-link tag="li" to="/dashboard">
+                   <router-link tag="li" to="/dashboard">
                 Dashboard
                  </router-link> 
                   <router-link tag="li" to="/addhotel">
@@ -37,8 +37,8 @@
                  <router-link tag="li" to="/bookings">
                 Bookings
                  </router-link>
-               <router-link tag="li" to="/reports">
-                Reports
+               <router-link tag="li" to="/transactions">
+                Transactions
                  </router-link> 
             </ul>
 
@@ -48,13 +48,29 @@
           
         <div class="content">
             <div class="head">
-                <h2>Add Hotel</h2>                      
+                <h2>Register An Hotel</h2>                      
             </div>
             <!-- table -->
             <div class="tables">
                 <div>
                 <v-app>
  <v-form ref="form" v-model="valid" lazy-validation>
+   <v-alert
+      :value="true"
+      type="error"
+      v-if="err"
+      dismissible
+    >
+      An error occured
+    </v-alert>
+   <v-alert
+      :value="true"
+      type="success"
+      v-if="success"
+      dismissible
+    >
+      Hotel Succesfully created
+    </v-alert>
     <v-text-field
       v-model="name"
       :rules="nameRules"
@@ -156,7 +172,7 @@
       <template slot="items" slot-scope="props">
         <td class="">{{ props.item.name }}</td>
         <td class="">{{ props.item.location }}</td>
-        <td class="">{{ props.item.address }}</td>
+        <td class="">{{ props.item.Address }}</td>
         <td class="">{{ props.item.contact }}</td>
         <td class="justify-center layout px-0">
           <v-icon
@@ -192,9 +208,10 @@
 <script>
 import axios from "axios";
 export default {
-  name: "allbookings",
+  name: "addhotel",
   data() {
     return {
+      err: false,
       dialog: false,
       editedIndex: -1,
       editedItem: {
@@ -211,6 +228,7 @@ export default {
         contact: ""
       },
       valid: true,
+      success: false,
       name: "",
       address: "",
       nameRules: [
@@ -226,44 +244,7 @@ export default {
       roles: ["clerk", "admin", "supervisor", "receptionist"],
       location: "",
       checkbox: false,
-      hotels: [
-        {
-          name: "Hadassah Hotel",
-          location: "Nairobi",
-          address: "CBD",
-          contact: "+254 711 444 471"
-        },
-        {
-          name: "Masada Hotel",
-          location: "Naivasha",
-          address: "Lake Naivasha",
-          contact: "+254 701 060 606"
-        },
-        {
-          name: "Pearl Palace Hotel",
-          location: "Nairobi",
-          address: "Pangani",
-          contact: "+254 720 229 966"
-        },
-        {
-          name: "West wood Hotel",
-          location: "Nairobi",
-          address: "Westlands",
-          contact: "+254 707 118 866"
-        },
-        {
-          name: "Sweet Lake Resort",
-          location: "Naivasha",
-          address: "Karagita",
-          contact: "+254 702 510 000"
-        },
-        {
-          name: "Lake Naivasha Resort",
-          location: "Naivasha",
-          address: "Lake Naiasha",
-          contact: "+254 702 668 317"
-        }
-      ],
+      hotels: [],
       headers: [
         { text: "Name", value: "name", align: "center" },
         { text: "Location", value: "location", align: "center" },
@@ -276,7 +257,7 @@ export default {
   },
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? "" : "Edit User";
+      return this.editedIndex === -1 ? "" : "Edit Hotel";
     }
   },
 
@@ -293,9 +274,13 @@ export default {
   methods: {
     getHotel() {
       axios
-        .get("http://111d39c5.ngrok.io:3000/groups/1/hotels")
+        .get("http://localhost:3000/groups/1/hotels")
         .then(result => {
-          console.log(result);
+          result.data.forEach(element => {
+            this.hotels.push(element);
+            console.log("HOTELS", element);
+          });
+          console.log(result.data);
         })
         .catch(err => {
           console.log(err);
@@ -306,18 +291,33 @@ export default {
         this.hotels.push({
           name: this.name,
           location: this.location,
-          address: this.address,
+          Address: this.address,
           contact: this.contact
         });
-        // console.log("I am working")
-        // axios.post(`http://111d39c5.ngrok.io:3000/groups/1/new/hotel?name=${this.name}&location=${this.location}&address=${this.address}`)
-        // .then((result) => {
-        //   console.log(result)
-
-        // }).catch((err) => {
-        //   console.log(err)
-
-        // });
+        console.log("I am working");
+        axios
+          .post(
+            `http://localhost:3000/groups/1/new/hotel?name=${
+              this.name
+            }&location=${this.location}&Address=${this.address}&contact=${
+              this.contact
+            }`
+          )
+          .then(result => {
+            if (result.statusText === "Created") {
+              this.success = true;
+              setTimeout(() => {
+                this.success = false;
+              }, 4000);
+              this.$refs.form.reset();
+            } else {
+              this.err = true;
+              console.log(result);
+            }
+          })
+          .catch(err => {
+            console.log(err);
+          });
       }
     },
     editItem(item) {
