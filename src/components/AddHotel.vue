@@ -1,11 +1,13 @@
 <template>
     <div class="main">
+
         <!-- navigation -->
         <div class="navigation">
             <div class="logo">
                 <img class="logo-top" src="https://nouveta.co.ke/nouvetamain.png" alt="logo" >
 
             </div>
+            <h1>Brian mituka</h1>
 
             <div class="profile">
                     <img class="logo-top" src="https://nouveta.co.ke/nouvetamain.png" alt="logo" >

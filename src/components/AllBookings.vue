@@ -3,6 +3,7 @@
     <!-- navigation -->
     <div class="navigation">
       <div class="logo">
+        <h1>Hello there</h1>
         <img class="logo-top" src="https://nouveta.co.ke/nouvetamain.png" alt="logo">
 
       </div>
